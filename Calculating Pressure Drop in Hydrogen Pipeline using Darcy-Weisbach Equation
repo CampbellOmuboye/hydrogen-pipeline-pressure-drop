@@ -1,0 +1,59 @@
+import math
+
+# Constants for hydrogen properties (fixed values)
+DENSITY_HYDROGEN = 0.08988  # kg/m^3 at STP
+DYNAMIC_VISCOSITY_HYDROGEN = 8.76e-6  # Pa·s
+
+# Function to get a positive float input from the user
+def get_positive_float(prompt):
+    while True:
+        try:
+            value = float(input(prompt))
+            if value > 0:
+                return value
+            else:
+                print("Please enter a positive number.")
+        except ValueError:
+            print("Invalid input. Please enter a number.")
+
+# Input parameters from the user
+pipe_length = get_positive_float("Enter the pipe length (m): ")
+pipe_diameter = get_positive_float("Enter the pipe diameter (m): ")
+flow_rate = get_positive_float("Enter the flow rate (m^3/s): ")
+roughness = get_positive_float("Enter the pipe roughness (m): ")
+
+# Calculate the cross-sectional area of the pipe
+cross_sectional_area = math.pi * (pipe_diameter / 2) ** 2
+
+# Calculate the velocity of hydrogen gas
+velocity = flow_rate / cross_sectional_area
+
+# Calculate the Reynolds number
+reynolds_number = (DENSITY_HYDROGEN * velocity * pipe_diameter) / DYNAMIC_VISCOSITY_HYDROGEN
+
+# Friction factor using the Colebrook-White equation
+def colebrook(roughness, diameter, reynolds):
+    # Initial guess for f
+    f_guess = 0.02
+    for _ in range(100):  # Iterate to refine f
+        left = -2.0 * math.log10((roughness / (3.7 * diameter)) + (2.51 / (reynolds * math.sqrt(f_guess))))
+        f_guess = 1 / left ** 2
+    return f_guess
+
+friction_factor = colebrook(roughness, pipe_diameter, reynolds_number)
+
+# Calculate the pressure drop using Darcy-Weisbach equation
+pressure_drop = (friction_factor * pipe_length / pipe_diameter) * 0.5 * DENSITY_HYDROGEN * velocity ** 2
+
+# Output results
+print("\nHydrogen Pipeline Simulation Results")
+print("------------------------------------")
+print(f"Pipe Length: {pipe_length} m")
+print(f"Pipe Diameter: {pipe_diameter} m")
+print(f"Flow Rate: {flow_rate} m^3/s")
+print(f"Hydrogen Density: {DENSITY_HYDROGEN} kg/m^3")
+print(f"Hydrogen Dynamic Viscosity: {DYNAMIC_VISCOSITY_HYDROGEN} Pa·s")
+print(f"Velocity: {velocity:.2f} m/s")
+print(f"Reynolds Number: {reynolds_number:.2f}")
+print(f"Friction Factor: {friction_factor:.4f}")
+print(f"Pressure Drop: {pressure_drop:.2f} Pa")
